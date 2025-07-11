@@ -1,3 +1,4 @@
+import Image from "next/image";
 export function Footer() {
   return (
     <footer className="bg-gray-900 dark:bg-gray-950 text-white py-8 mt-auto">
@@ -5,7 +6,6 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src="/datasynk.svg" alt="Logo DataSynk" className="h-6" />
               <h3 className="text-lg font-semibold">TicketPlatform</h3>
             </div>
             <p className="text-gray-400 dark:text-gray-500">
@@ -47,7 +47,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 dark:border-gray-700 mt-8 pt-8 text-center text-gray-400 dark:text-gray-500">
           <div className="flex flex-row items-center justify-center gap-4 flex-nowrap">
-            <img
+            <Image
               src="/datasynk.svg"
               alt="Logo DataSynk"
               className="h-8 align-middle"
