@@ -48,6 +48,8 @@ export function Footer() {
         <div className="border-t border-gray-800 dark:border-gray-700 mt-8 pt-8 text-center text-gray-400 dark:text-gray-500">
           <div className="flex flex-row items-center justify-center gap-4 flex-nowrap">
             <Image
+              width={100}
+              height={100}
               src="/datasynk.svg"
               alt="Logo DataSynk"
               className="h-8 align-middle"
