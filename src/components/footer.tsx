@@ -39,7 +39,7 @@ export function Footer() {
             <h4 className="text-md font-semibold mb-4">Contato</h4>
             <ul className="space-y-2 text-gray-400 dark:text-gray-500">
               <li>Email: contato@ticketplatform.com</li>
-              <li>Telefone: (11) 9999-9999</li>
+              <li>Telefone: (71) 9999-9999</li>
               <li>WhatsApp: (11) 8888-8888</li>
             </ul>
           </div>
