@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +16,11 @@ import { Badge } from "@/components/ui/badge";
 import { Search, CheckCircle, XCircle, Loader2, Ticket } from "lucide-react";
 import { ingressosMock } from "@/lib/mock-data";
 import { MESSAGES } from "@/lib/constants";
-import { VerificarIngressoRequest, VerificarIngressoResponse, Ingresso } from "@/types";
+import {
+  VerificarIngressoRequest,
+  VerificarIngressoResponse,
+  Ingresso,
+} from "@/types";
 
 export default function VerificarPage() {
   const [formData, setFormData] = useState<VerificarIngressoRequest>({
@@ -18,37 +28,44 @@ export default function VerificarPage() {
     nome: "",
   });
   const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState<VerificarIngressoResponse | null>(null);
+  const [resultado, setResultado] = useState<VerificarIngressoResponse | null>(
+    null
+  );
 
-  const handleInputChange = (field: keyof VerificarIngressoRequest, value: string) => {
-    setFormData(prev => ({
+  const handleInputChange = (
+    field: keyof VerificarIngressoRequest,
+    value: string
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const formatCPF = (value: string) => {
     // Remove tudo que não é dígito
-    const numbers = value.replace(/\D/g, '');
-    
+    const numbers = value.replace(/\D/g, "");
+
     // Aplica a máscara do CPF
     if (numbers.length <= 11) {
-      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
     }
-    
-    return numbers.slice(0, 11).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+
+    return numbers
+      .slice(0, 11)
+      .replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCPF(e.target.value);
-    handleInputChange('cpf', formatted);
+    handleInputChange("cpf", formatted);
   };
 
   const verificarIngresso = async () => {
     if (!formData.cpf && !formData.nome) {
       setResultado({
         sucesso: false,
-        mensagem: "Por favor, preencha pelo menos um campo (CPF ou Nome)."
+        mensagem: "Por favor, preencha pelo menos um campo (CPF ou Nome).",
       });
       return;
     }
@@ -58,18 +75,18 @@ export default function VerificarPage() {
 
     try {
       // Simula delay da API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Busca ingresso nos dados mockados
       let ingressoEncontrado: Ingresso | undefined;
 
       if (formData.cpf) {
-        ingressoEncontrado = ingressosMock.find(ingresso => 
-          ingresso.cpf === formData.cpf
+        ingressoEncontrado = ingressosMock.find(
+          (ingresso) => ingresso.cpf === formData.cpf
         );
       } else if (formData.nome) {
-        ingressoEncontrado = ingressosMock.find(ingresso => 
-          ingresso.nome.toLowerCase().includes(formData.nome.toLowerCase())
+        ingressoEncontrado = ingressosMock.find((ingresso) =>
+          ingresso.nome.toLowerCase().includes(formData.nome!.toLowerCase())
         );
       }
 
@@ -78,19 +95,19 @@ export default function VerificarPage() {
           sucesso: true,
           mensagem: `${MESSAGES.INGRESSO_ENCONTRADO} ${ingressoEncontrado.hash}`,
           ingresso: ingressoEncontrado,
-          hash: ingressoEncontrado.hash
+          hash: ingressoEncontrado.hash,
         });
       } else {
         setResultado({
           sucesso: false,
-          mensagem: MESSAGES.INGRESSO_NAO_ENCONTRADO
+          mensagem: MESSAGES.INGRESSO_NAO_ENCONTRADO,
         });
       }
     } catch (error) {
       console.error("Erro ao verificar ingresso:", error);
       setResultado({
         sucesso: false,
-        mensagem: MESSAGES.ERRO_SERVIDOR
+        mensagem: MESSAGES.ERRO_SERVIDOR,
       });
     } finally {
       setLoading(false);
@@ -115,11 +132,11 @@ export default function VerificarPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'ativo':
+      case "ativo":
         return <Badge className="bg-green-100 text-green-800">Ativo</Badge>;
-      case 'usado':
+      case "usado":
         return <Badge className="bg-yellow-100 text-yellow-800">Usado</Badge>;
-      case 'cancelado':
+      case "cancelado":
         return <Badge className="bg-red-100 text-red-800">Cancelado</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
@@ -131,9 +148,12 @@ export default function VerificarPage() {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <Ticket className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-foreground mb-2">Verificar Ingresso</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Verificar Ingresso
+          </h1>
           <p className="text-muted-foreground">
-            Digite seu CPF ou nome para verificar se seu ingresso foi adquirido com sucesso.
+            Digite seu CPF ou nome para verificar se seu ingresso foi adquirido
+            com sucesso.
           </p>
         </div>
 
@@ -141,7 +161,8 @@ export default function VerificarPage() {
           <CardHeader>
             <CardTitle>Consultar Ingresso</CardTitle>
             <CardDescription>
-              Preencha pelo menos um dos campos abaixo para verificar seu ingresso.
+              Preencha pelo menos um dos campos abaixo para verificar seu
+              ingresso.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -165,14 +186,14 @@ export default function VerificarPage() {
                     type="text"
                     placeholder="Digite seu nome"
                     value={formData.nome}
-                    onChange={(e) => handleInputChange('nome', e.target.value)}
+                    onChange={(e) => handleInputChange("nome", e.target.value)}
                   />
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 size="lg"
                 disabled={loading || (!formData.cpf && !formData.nome)}
               >
@@ -193,13 +214,23 @@ export default function VerificarPage() {
             {/* Resultado da Verificação */}
             {resultado && (
               <div className="mt-6">
-                <Alert className={resultado.sucesso ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+                <Alert
+                  className={
+                    resultado.sucesso
+                      ? "border-green-200 bg-green-50"
+                      : "border-red-200 bg-red-50"
+                  }
+                >
                   {resultado.sucesso ? (
                     <CheckCircle className="h-4 w-4 text-green-600" />
                   ) : (
                     <XCircle className="h-4 w-4 text-red-600" />
                   )}
-                  <AlertDescription className={resultado.sucesso ? "text-green-800" : "text-red-800"}>
+                  <AlertDescription
+                    className={
+                      resultado.sucesso ? "text-green-800" : "text-red-800"
+                    }
+                  >
                     {resultado.mensagem}
                   </AlertDescription>
                 </Alert>
@@ -216,24 +247,42 @@ export default function VerificarPage() {
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label className="text-sm font-medium text-gray-500">Nome</Label>
-                          <p className="text-sm font-medium">{resultado.ingresso.nome}</p>
+                          <Label className="text-sm font-medium text-gray-500">
+                            Nome
+                          </Label>
+                          <p className="text-sm font-medium">
+                            {resultado.ingresso.nome}
+                          </p>
                         </div>
                         <div>
-                          <Label className="text-sm font-medium text-gray-500">CPF</Label>
-                          <p className="text-sm font-medium">{resultado.ingresso.cpf}</p>
+                          <Label className="text-sm font-medium text-gray-500">
+                            CPF
+                          </Label>
+                          <p className="text-sm font-medium">
+                            {resultado.ingresso.cpf}
+                          </p>
                         </div>
                         <div>
-                          <Label className="text-sm font-medium text-gray-500">Email</Label>
-                          <p className="text-sm font-medium">{resultado.ingresso.email}</p>
+                          <Label className="text-sm font-medium text-gray-500">
+                            Email
+                          </Label>
+                          <p className="text-sm font-medium">
+                            {resultado.ingresso.email}
+                          </p>
                         </div>
                         <div>
-                          <Label className="text-sm font-medium text-gray-500">Data da Compra</Label>
-                          <p className="text-sm font-medium">{formatDate(resultado.ingresso.dataCompra)}</p>
+                          <Label className="text-sm font-medium text-gray-500">
+                            Data da Compra
+                          </Label>
+                          <p className="text-sm font-medium">
+                            {formatDate(resultado.ingresso.dataCompra)}
+                          </p>
                         </div>
                       </div>
                       <div className="pt-2 border-t">
-                        <Label className="text-sm font-medium text-gray-500">Hash do Ingresso</Label>
+                        <Label className="text-sm font-medium text-gray-500">
+                          Hash do Ingresso
+                        </Label>
                         <p className="text-sm font-mono bg-gray-100 p-2 rounded mt-1 break-all">
                           {resultado.ingresso.hash}
                         </p>
@@ -264,4 +313,3 @@ export default function VerificarPage() {
     </div>
   );
 }
-
