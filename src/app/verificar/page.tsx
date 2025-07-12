@@ -14,12 +14,13 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Search, CheckCircle, XCircle, Loader2, Ticket } from "lucide-react";
-import { ingressosMock } from "@/lib/mock-data";
 import { MESSAGES } from "@/lib/constants";
+import { normalizarTexto } from "@/lib/utils";
 import {
   VerificarIngressoRequest,
   VerificarIngressoResponse,
-  Ingresso,
+  IngressoExterno,
+  ApiExternaResponse,
 } from "@/types";
 
 export default function VerificarPage() {
@@ -74,27 +75,64 @@ export default function VerificarPage() {
     setResultado(null);
 
     try {
-      // Simula delay da API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Chama a API local que faz proxy para localhost:3002
+      const response = await fetch("/api/ingressos", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      // Busca ingresso nos dados mockados
-      let ingressoEncontrado: Ingresso | undefined;
+      if (!response.ok) {
+        throw new Error(`Erro na API: ${response.status}`);
+      }
 
-      if (formData.cpf) {
-        ingressoEncontrado = ingressosMock.find(
+      const apiResponse: ApiExternaResponse = await response.json();
+      const ingressos: IngressoExterno[] = apiResponse.data;
+
+      // Busca ingresso
+      let ingressoEncontrado: IngressoExterno | undefined;
+
+      if (formData.cpf && formData.nome) {
+        // Se CPF e nome foram fornecidos, busca por ambos
+        const nomeNormalizado = normalizarTexto(formData.nome);
+        ingressoEncontrado = ingressos.find((ingresso) => {
+          const nomeIngressoNormalizado = normalizarTexto(ingresso.nome);
+          return (
+            ingresso.cpf === formData.cpf &&
+            nomeIngressoNormalizado.includes(nomeNormalizado)
+          );
+        });
+      } else if (formData.cpf) {
+        // Se apenas CPF foi fornecido, busca apenas por CPF
+        ingressoEncontrado = ingressos.find(
           (ingresso) => ingresso.cpf === formData.cpf
         );
-      } else if (formData.nome) {
-        ingressoEncontrado = ingressosMock.find((ingresso) =>
-          ingresso.nome.toLowerCase().includes(formData.nome!.toLowerCase())
-        );
+      } else {
+        // Busca apenas por nome
+        const nomeNormalizado = normalizarTexto(formData.nome!);
+        ingressoEncontrado = ingressos.find((ingresso) => {
+          const nomeIngressoNormalizado = normalizarTexto(ingresso.nome);
+          return nomeIngressoNormalizado.includes(nomeNormalizado);
+        });
       }
 
       if (ingressoEncontrado) {
         setResultado({
           sucesso: true,
-          mensagem: `${MESSAGES.INGRESSO_ENCONTRADO} ${ingressoEncontrado.hash}`,
-          ingresso: ingressoEncontrado,
+          mensagem: `Ingresso encontrado para ${ingressoEncontrado.nome}${
+            ingressoEncontrado.cpf ? ` (CPF: ${ingressoEncontrado.cpf})` : ""
+          }`,
+          ingresso: {
+            id: ingressoEncontrado.id,
+            eventoId: ingressoEncontrado.eventoId,
+            cpf: ingressoEncontrado.cpf || "não informado",
+            nome: ingressoEncontrado.nome,
+            email: ingressoEncontrado.email,
+            hash: ingressoEncontrado.hash,
+            dataCompra: ingressoEncontrado.dataCompra,
+            status: ingressoEncontrado.status,
+          },
           hash: ingressoEncontrado.hash,
         });
       } else {
@@ -107,7 +145,8 @@ export default function VerificarPage() {
       console.error("Erro ao verificar ingresso:", error);
       setResultado({
         sucesso: false,
-        mensagem: MESSAGES.ERRO_SERVIDOR,
+        mensagem:
+          "Erro ao conectar com o servidor. Verifique se a API externa está disponível.",
       });
     } finally {
       setLoading(false);
@@ -162,7 +201,8 @@ export default function VerificarPage() {
             <CardTitle>Consultar Ingresso</CardTitle>
             <CardDescription>
               Preencha pelo menos um dos campos abaixo para verificar seu
-              ingresso.
+              ingresso. O CPF é opcional e pode ser usado para busca mais
+              precisa.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -283,7 +323,7 @@ export default function VerificarPage() {
                         <Label className="text-sm font-medium text-gray-500">
                           Hash do Ingresso
                         </Label>
-                        <p className="text-sm font-mono bg-gray-100 p-2 rounded mt-1 break-all">
+                        <p className="text-sm font-mono bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-2 rounded mt-1 break-all">
                           {resultado.ingresso.hash}
                         </p>
                       </div>

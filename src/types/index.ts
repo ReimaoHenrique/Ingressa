@@ -20,7 +20,44 @@ export interface Ingresso {
   email: string;
   hash: string;
   dataCompra: string;
-  status: 'ativo' | 'usado' | 'cancelado';
+  status: "ativo" | "usado" | "cancelado";
+}
+
+// Tipo para a estrutura real da API externa
+export interface IngressoExterno {
+  id: string;
+  eventoId: string;
+  nomeEvento: string;
+  cpf: string | null;
+  nome: string;
+  email: string;
+  hash: string;
+  dataCompra: string;
+  status: "ativo" | "usado" | "cancelado";
+  createdAt: string;
+  updatedAt: string;
+  evento: {
+    id: string;
+    nome: string;
+    descricao: string;
+    imagem: string | null;
+    data: string;
+    local: string;
+    preco: number;
+    ingressosDisponiveis: number;
+    ingressosTotal: number;
+    linkPagamento: string;
+    termosUso: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+// Tipo para a resposta da API externa
+export interface ApiExternaResponse {
+  sucesso: boolean;
+  data: IngressoExterno[];
 }
 
 export interface Festa {
@@ -32,12 +69,12 @@ export interface Festa {
   lucroTotal: number;
   lucroAtual: number;
   data: string;
-  status: 'ativa' | 'finalizada' | 'cancelada';
+  status: "ativa" | "finalizada" | "cancelada";
 }
 
 export interface VerificarIngressoRequest {
-  cpf?: string;
-  nome?: string;
+  cpf?: string; // Opcional
+  nome?: string; // Opcional
 }
 
 export interface VerificarIngressoResponse {
@@ -56,4 +93,3 @@ export interface AdminLoginResponse {
   token?: string;
   mensagem: string;
 }
-
