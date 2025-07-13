@@ -154,18 +154,30 @@ export function TicketForm({
 
           // Iniciar contagem regressiva
           setCountdown(3);
+          let linkOpened = false; // Flag para evitar abrir múltiplos links
 
           const countdownInterval = setInterval(() => {
             setCountdown((prev) => {
               if (prev === null || prev <= 0) {
                 clearInterval(countdownInterval);
 
-                // Abrir Mercado Pago em nova aba
-                window.open(
-                  paymentResult.data.init_point,
-                  "_blank",
-                  "noopener,noreferrer"
-                );
+                // Evitar abrir múltiplos links
+                if (!linkOpened) {
+                  linkOpened = true;
+
+                  // Log do link de pagamento
+                  console.log(
+                    "Link de pagamento:",
+                    paymentResult.data.init_point
+                  );
+
+                  // Abrir Mercado Pago em nova aba
+                  window.open(
+                    paymentResult.data.init_point,
+                    "_blank",
+                    "noopener,noreferrer"
+                  );
+                }
                 return null;
               }
               return prev - 1;
