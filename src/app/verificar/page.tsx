@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Search, CheckCircle, XCircle, Loader2, Ticket } from "lucide-react";
-import { MESSAGES, API_ENDPOINTS } from "@/lib/constants";
+import { MESSAGES } from "@/lib/constants";
 import { VerificarConvidadoRequest, VerificarConvidadoResponse } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 

@@ -7,24 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Calendar, MapPin, Users, Info, Loader2 } from "lucide-react";
 import { eventoMock } from "@/lib/mock-data";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
+import { Accordion } from "@/components/ui/accordion";
 import { TicketForm } from "@/components/TicketForm";
 import { useEventos } from "@/lib/hooks/useEventos";
 
@@ -195,7 +178,7 @@ export default function Home() {
               <AlertDescription>{evento.termosUsoTitle}</AlertDescription>
             </Alert>
             <Accordion type="single" collapsible>
-              <TicketForm eventoId={evento.id} preco={evento.preco} />
+              <TicketForm preco={evento.preco} />
             </Accordion>
           </CardContent>
         </Card>

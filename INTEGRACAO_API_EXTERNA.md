@@ -39,14 +39,14 @@ Esta aplicação foi integrada com a API externa `https://koi-pretty-quietly.ngr
 ### 2. Comprar Ingresso
 
 - **URL**: `POST /api/eventos/convidados`
-- **Descrição**: Processa a compra de um ingresso e retorna link de pagamento
+- **Descrição**: Processa a compra de um ingresso e retorna ID do convidado
 - **Payload**:
 
 ```json
 {
   "nome": "string",
   "email": "string",
-  "cpf": "string (apenas números)",
+  "cpf": "string (apenas números, opcional)",
   "eventoId": "1"
 }
 ```
@@ -57,8 +57,44 @@ Esta aplicação foi integrada com a API externa `https://koi-pretty-quietly.ngr
 {
   "sucesso": true,
   "data": {
-    "linkPagamento": "string"
+    "id": "string"
   }
+}
+```
+
+### 3. Gerar Link de Pagamento (Mercado Pago)
+
+- **URL**: `POST https://jvdpz4zf-3000.brs.devtunnels.ms/payment/create-preference`
+- **Descrição**: Cria preferência de pagamento no Mercado Pago
+- **Payload**:
+
+```json
+{
+  "title": "Boreal Fest",
+  "description": "Uma festa",
+  "quantity": 1,
+  "unit_price": 1.05,
+  "currency_id": "BRL",
+  "external_reference": "ID_DO_CONVIDADO",
+  "payer": {
+    "name": "string",
+    "email": "string"
+  }
+}
+```
+
+- **Resposta Esperada**:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "string",
+    "init_point": "https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=...",
+    "sandbox_init_point": "https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id=...",
+    "external_reference": "ID_DO_CONVIDADO"
+  },
+  "message": "Preferência criada com sucesso"
 }
 ```
 
@@ -108,7 +144,8 @@ Esta aplicação foi integrada com a API externa `https://koi-pretty-quietly.ngr
 - Validação de CPF com algoritmo oficial
 - Formatação automática de CPF
 - Estados de loading e sucesso/erro
-- Abertura automática do link de pagamento
+- Integração com Mercado Pago
+- Geração automática de link de pagamento
 
 ### ✅ Tratamento de Erros
 
@@ -170,5 +207,8 @@ A aplicação possui tratamento robusto de erros:
 
 - Nome completo
 - Email
-- CPF
 - Aceite dos termos de uso
+
+### Campos Opcionais
+
+- CPF (com validação se preenchido)

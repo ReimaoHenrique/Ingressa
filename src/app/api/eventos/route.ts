@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         eventoId: "1",
-        cpf: body.cpf,
         nome: body.nome,
         email: body.email,
+        ...(body.cpf && { cpf: body.cpf }), // Só envia CPF se existir
       }),
     });
 

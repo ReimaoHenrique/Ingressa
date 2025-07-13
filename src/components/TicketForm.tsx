@@ -17,18 +17,17 @@ import {
 import { useForm } from "react-hook-form";
 import { Ticket, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { createPaymentPreference } from "@/lib/payment";
 
 interface TicketFormProps {
   accordionValue?: string;
   children?: React.ReactNode;
-  eventoId?: string;
   preco?: number;
 }
 
 export function TicketForm({
   accordionValue = "ticket-form",
   children,
-  eventoId,
   preco,
 }: TicketFormProps) {
   const [success, setSuccess] = useState(false);
@@ -36,6 +35,7 @@ export function TicketForm({
   const [error, setError] = useState<string | null>(null);
   const [termsError, setTermsError] = useState("");
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [convidadoId, setConvidadoId] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -112,6 +112,7 @@ export function TicketForm({
     setLoading(true);
 
     try {
+      // Primeiro, criar o convidado
       const response = await fetch("/api/eventos", {
         method: "POST",
         headers: {
@@ -120,7 +121,7 @@ export function TicketForm({
         body: JSON.stringify({
           nome: data.fullName,
           email: data.email,
-          cpf: data.cpf.replace(/\D/g, ""), // Remove formatação
+          ...(data.cpf && { cpf: data.cpf.replace(/\D/g, "") }), // Só envia CPF se preenchido
         }),
       });
 
@@ -131,29 +132,55 @@ export function TicketForm({
       }
 
       if (result.sucesso) {
-        setSuccess(true);
-        form.reset();
+        // Capturar o ID do convidado
+        const convidadoId = result.data?.id;
+        if (convidadoId) {
+          setConvidadoId(convidadoId);
+          console.log("ID do convidado criado:", convidadoId);
+        }
 
-        // Debug: log da resposta
-        console.log("Resposta da API:", result);
+        // Agora criar o link de pagamento
+        try {
+          console.log("Criando link de pagamento com ID:", convidadoId);
+          const paymentResult = await createPaymentPreference(
+            data.fullName,
+            data.email,
+            convidadoId
+          );
+          console.log("Link de pagamento criado:", paymentResult);
 
-        // Iniciar contagem regressiva
-        setCountdown(3);
+          setSuccess(true);
+          form.reset();
 
-        const countdownInterval = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev === null || prev <= 0) {
-              clearInterval(countdownInterval);
+          // Iniciar contagem regressiva
+          setCountdown(3);
 
-              // Redirecionar para o Google após a contagem
-              window.location.href = "https://www.google.com";
-              return null;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+          const countdownInterval = setInterval(() => {
+            setCountdown((prev) => {
+              if (prev === null || prev <= 0) {
+                clearInterval(countdownInterval);
 
-        setTimeout(() => setSuccess(false), 5000);
+                // Abrir Mercado Pago em nova aba
+                window.open(
+                  paymentResult.data.init_point,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+                return null;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+
+          setTimeout(() => setSuccess(false), 5000);
+        } catch (paymentError) {
+          console.error("Erro ao criar link de pagamento:", paymentError);
+          const errorMessage =
+            paymentError instanceof Error
+              ? paymentError.message
+              : "Erro desconhecido";
+          setError(`Erro ao gerar link de pagamento: ${errorMessage}`);
+        }
       } else {
         setError(result.mensagem || "Erro ao processar compra");
       }
@@ -223,12 +250,14 @@ export function TicketForm({
               control={form.control}
               name="cpf"
               rules={{
-                required: "CPF é obrigatório",
-                validate: validateCPF,
+                validate: (value) => {
+                  if (!value) return true; // CPF não é obrigatório
+                  return validateCPF(value);
+                },
               }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>CPF</FormLabel>
+                  <FormLabel>CPF (opcional)</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="000.000.000-00"
@@ -303,8 +332,16 @@ export function TicketForm({
                 <AlertDescription className="text-green-600">
                   {countdown !== null ? (
                     <>
-                      Compra realizada com sucesso! Você será redirecionado para
-                      o pagamento em{" "}
+                      Compra realizada com sucesso!
+                      {convidadoId && (
+                        <span className="block text-sm mt-1">
+                          ID do convidado:{" "}
+                          <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+                            {convidadoId}
+                          </span>
+                        </span>
+                      )}
+                      O link de pagamento será aberto em uma nova aba em{" "}
                       <span className="font-bold text-blue-600">
                         {countdown}
                       </span>{" "}
