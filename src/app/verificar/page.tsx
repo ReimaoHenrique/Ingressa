@@ -14,27 +14,23 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Search, CheckCircle, XCircle, Loader2, Ticket } from "lucide-react";
-import { MESSAGES } from "@/lib/constants";
-import { normalizarTexto } from "@/lib/utils";
-import {
-  VerificarIngressoRequest,
-  VerificarIngressoResponse,
-  IngressoExterno,
-  ApiExternaResponse,
-} from "@/types";
+import { MESSAGES, API_ENDPOINTS } from "@/lib/constants";
+import { VerificarConvidadoRequest, VerificarConvidadoResponse } from "@/types";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function VerificarPage() {
-  const [formData, setFormData] = useState<VerificarIngressoRequest>({
+  const [tipoBusca, setTipoBusca] = useState<"cpf" | "email">("email");
+  const [formData, setFormData] = useState<VerificarConvidadoRequest>({
     cpf: "",
-    nome: "",
+    email: "",
   });
   const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState<VerificarIngressoResponse | null>(
+  const [resultado, setResultado] = useState<VerificarConvidadoResponse | null>(
     null
   );
 
   const handleInputChange = (
-    field: keyof VerificarIngressoRequest,
+    field: keyof VerificarConvidadoRequest,
     value: string
   ) => {
     setFormData((prev) => ({
@@ -62,11 +58,15 @@ export default function VerificarPage() {
     handleInputChange("cpf", formatted);
   };
 
-  const verificarIngresso = async () => {
-    if (!formData.cpf && !formData.nome) {
+  const verificarConvidado = async () => {
+    const valor = tipoBusca === "cpf" ? formData.cpf : formData.email;
+
+    if (!valor) {
       setResultado({
         sucesso: false,
-        mensagem: "Por favor, preencha pelo menos um campo (CPF ou Nome).",
+        mensagem: `Por favor, preencha o campo ${
+          tipoBusca === "cpf" ? "CPF" : "Email"
+        }.`,
       });
       return;
     }
@@ -75,78 +75,44 @@ export default function VerificarPage() {
     setResultado(null);
 
     try {
-      // Chama a API local que faz proxy para localhost:3002
-      const response = await fetch("/api/ingressos", {
-        method: "GET",
+      // Prepara o payload para a API
+      const payload: VerificarConvidadoRequest = {};
+
+      if (tipoBusca === "email") {
+        payload.email = formData.email;
+      } else {
+        payload.cpf = formData.cpf;
+      }
+
+      // Chama a API local que faz proxy para a API externa
+      const response = await fetch("/api/verificar-convidado", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         throw new Error(`Erro na API: ${response.status}`);
       }
 
-      const apiResponse: ApiExternaResponse = await response.json();
-      const ingressos: IngressoExterno[] = apiResponse.data;
+      const apiResponse: VerificarConvidadoResponse = await response.json();
 
-      // Busca ingresso
-      let ingressoEncontrado: IngressoExterno | undefined;
-
-      if (formData.cpf && formData.nome) {
-        // Se CPF e nome foram fornecidos, busca por ambos
-        const nomeNormalizado = normalizarTexto(formData.nome);
-        ingressoEncontrado = ingressos.find((ingresso) => {
-          const nomeIngressoNormalizado = normalizarTexto(ingresso.nome);
-          return (
-            ingresso.cpf === formData.cpf &&
-            nomeIngressoNormalizado.includes(nomeNormalizado)
-          );
-        });
-      } else if (formData.cpf) {
-        // Se apenas CPF foi fornecido, busca apenas por CPF
-        ingressoEncontrado = ingressos.find(
-          (ingresso) => ingresso.cpf === formData.cpf
-        );
-      } else {
-        // Busca apenas por nome
-        const nomeNormalizado = normalizarTexto(formData.nome!);
-        ingressoEncontrado = ingressos.find((ingresso) => {
-          const nomeIngressoNormalizado = normalizarTexto(ingresso.nome);
-          return nomeIngressoNormalizado.includes(nomeNormalizado);
-        });
-      }
-
-      if (ingressoEncontrado) {
-        setResultado({
-          sucesso: true,
-          mensagem: `Ingresso encontrado para ${ingressoEncontrado.nome}${
-            ingressoEncontrado.cpf ? ` (CPF: ${ingressoEncontrado.cpf})` : ""
-          }`,
-          ingresso: {
-            id: ingressoEncontrado.id,
-            eventoId: ingressoEncontrado.eventoId,
-            cpf: ingressoEncontrado.cpf || "não informado",
-            nome: ingressoEncontrado.nome,
-            email: ingressoEncontrado.email,
-            hash: ingressoEncontrado.hash,
-            dataCompra: ingressoEncontrado.dataCompra,
-            status: ingressoEncontrado.status,
-          },
-          hash: ingressoEncontrado.hash,
-        });
+      if (apiResponse.sucesso) {
+        setResultado(apiResponse);
       } else {
         setResultado({
           sucesso: false,
-          mensagem: MESSAGES.INGRESSO_NAO_ENCONTRADO,
+          mensagem: apiResponse.mensagem || MESSAGES.CONVIDADO_NAO_ENCONTRADO,
         });
       }
     } catch (error) {
-      console.error("Erro ao verificar ingresso:", error);
+      console.error("Erro ao verificar convidado:", error);
       setResultado({
         sucesso: false,
         mensagem:
-          "Erro ao conectar com o servidor. Verifique se a API externa está disponível.",
+          "Erro ao conectar com o servidor. Verifique sua conexão e tente novamente.",
       });
     } finally {
       setLoading(false);
@@ -155,7 +121,7 @@ export default function VerificarPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    verificarIngresso();
+    verificarConvidado();
   };
 
   const formatDate = (dateString: string) => {
@@ -170,11 +136,15 @@ export default function VerificarPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "ativo":
-        return <Badge className="bg-green-100 text-green-800">Ativo</Badge>;
-      case "usado":
-        return <Badge className="bg-yellow-100 text-yellow-800">Usado</Badge>;
+    switch (status.toLowerCase()) {
+      case "confirmado":
+        return (
+          <Badge className="bg-green-100 text-green-800">Confirmado</Badge>
+        );
+      case "pendente":
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800">Pendente</Badge>
+        );
       case "cancelado":
         return <Badge className="bg-red-100 text-red-800">Cancelado</Badge>;
       default:
@@ -188,54 +158,91 @@ export default function VerificarPage() {
         <div className="text-center mb-8">
           <Ticket className="h-16 w-16 text-blue-600 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Verificar Ingresso
+            Verificar Convite
           </h1>
           <p className="text-muted-foreground">
-            Digite seu CPF ou nome para verificar se seu ingresso foi adquirido
-            com sucesso.
+            Digite seu CPF ou email para verificar o status do seu convite.
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Consultar Ingresso</CardTitle>
+            <CardTitle>Consultar Convite</CardTitle>
             <CardDescription>
-              Preencha pelo menos um dos campos abaixo para verificar seu
-              ingresso. O CPF é opcional e pode ser usado para busca mais
-              precisa.
+              Escolha como deseja verificar seu convite e preencha o campo
+              correspondente.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF</Label>
-                  <Input
-                    id="cpf"
-                    type="text"
-                    placeholder="000.000.000-00"
-                    value={formData.cpf}
-                    onChange={handleCPFChange}
-                    maxLength={14}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome Completo</Label>
-                  <Input
-                    id="nome"
-                    type="text"
-                    placeholder="Digite seu nome"
-                    value={formData.nome}
-                    onChange={(e) => handleInputChange("nome", e.target.value)}
-                  />
-                </div>
+              {/* Seleção do tipo de busca */}
+              <div className="space-y-3">
+                <Label className="text-base font-medium">
+                  Como você deseja verificar?
+                </Label>
+                <RadioGroup
+                  value={tipoBusca}
+                  onValueChange={(value) =>
+                    setTipoBusca(value as "cpf" | "email")
+                  }
+                  className="flex flex-col space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="email" id="email-option" />
+                    <Label
+                      htmlFor="email-option"
+                      className="text-sm font-normal"
+                    >
+                      Verificar por Email
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="cpf" id="cpf-option" />
+                    <Label htmlFor="cpf-option" className="text-sm font-normal">
+                      Verificar por CPF
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Campo de entrada */}
+              <div className="space-y-2">
+                {tipoBusca === "email" ? (
+                  <>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={formData.email}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Label htmlFor="cpf">CPF</Label>
+                    <Input
+                      id="cpf"
+                      type="text"
+                      placeholder="000.000.000-00"
+                      value={formData.cpf}
+                      onChange={handleCPFChange}
+                      maxLength={14}
+                    />
+                  </>
+                )}
               </div>
 
               <Button
                 type="submit"
                 className="w-full"
                 size="lg"
-                disabled={loading || (!formData.cpf && !formData.nome)}
+                disabled={
+                  loading ||
+                  !(tipoBusca === "cpf" ? formData.cpf : formData.email)
+                }
               >
                 {loading ? (
                   <>
@@ -245,7 +252,7 @@ export default function VerificarPage() {
                 ) : (
                   <>
                     <Search className="h-4 w-4 mr-2" />
-                    Verificar Ingresso
+                    Verificar Convite
                   </>
                 )}
               </Button>
@@ -275,57 +282,41 @@ export default function VerificarPage() {
                   </AlertDescription>
                 </Alert>
 
-                {/* Detalhes do Ingresso */}
-                {resultado.sucesso && resultado.ingresso && (
+                {/* Detalhes do Evento */}
+                {resultado.sucesso && resultado.data && (
                   <Card className="mt-4">
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
-                        <span>Detalhes do Ingresso</span>
-                        {getStatusBadge(resultado.ingresso.status)}
+                        <span>Detalhes do Evento</span>
+                        {getStatusBadge(resultado.data.status)}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label className="text-sm font-medium text-gray-500">
-                            Nome
+                            Nome do Evento
                           </Label>
                           <p className="text-sm font-medium">
-                            {resultado.ingresso.nome}
+                            {resultado.data.evento.nome}
                           </p>
                         </div>
                         <div>
                           <Label className="text-sm font-medium text-gray-500">
-                            CPF
+                            Local
                           </Label>
                           <p className="text-sm font-medium">
-                            {resultado.ingresso.cpf}
+                            {resultado.data.evento.local}
                           </p>
                         </div>
-                        <div>
+                        <div className="md:col-span-2">
                           <Label className="text-sm font-medium text-gray-500">
-                            Email
+                            Data e Hora
                           </Label>
                           <p className="text-sm font-medium">
-                            {resultado.ingresso.email}
+                            {formatDate(resultado.data.evento.data)}
                           </p>
                         </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-500">
-                            Data da Compra
-                          </Label>
-                          <p className="text-sm font-medium">
-                            {formatDate(resultado.ingresso.dataCompra)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="pt-2 border-t">
-                        <Label className="text-sm font-medium text-gray-500">
-                          Hash do Ingresso
-                        </Label>
-                        <p className="text-sm font-mono bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-2 rounded mt-1 break-all">
-                          {resultado.ingresso.hash}
-                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -338,7 +329,7 @@ export default function VerificarPage() {
         {/* Informações Adicionais */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500 mb-4">
-            Não encontrou seu ingresso? Entre em contato conosco.
+            Não encontrou seu convite? Entre em contato conosco.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <Button variant="outline" size="sm">

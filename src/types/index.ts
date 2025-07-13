@@ -8,8 +8,7 @@ export interface Evento {
   preco: number;
   ingressosDisponiveis: number;
   ingressosTotal: number;
-  linkPagamento: string;
-  termosUso: string;
+  termosUsoTitle: string;
 }
 
 export interface Ingresso {
@@ -60,6 +59,30 @@ export interface ApiExternaResponse {
   data: IngressoExterno[];
 }
 
+// Tipos para Mercado Pago
+export interface CompraIngressoRequest {
+  nome: string;
+  email: string;
+  cpf: string;
+  eventoId: string;
+}
+
+export interface MercadoPagoResponse {
+  success: boolean;
+  data: {
+    id: string;
+    init_point: string;
+    sandbox_init_point: string;
+    client_id: string;
+    collector_id: number;
+    operation_type: string;
+    additional_info: string;
+    external_reference: string;
+    date_created: string;
+  };
+  message: string;
+}
+
 export interface Festa {
   id: string;
   nome: string;
@@ -92,4 +115,25 @@ export interface AdminLoginResponse {
   sucesso: boolean;
   token?: string;
   mensagem: string;
+}
+
+// Novos tipos para a API de verificação de convidados
+export interface VerificarConvidadoRequest {
+  email?: string;
+  cpf?: string;
+}
+
+export interface EventoConvidado {
+  nome: string;
+  data: string;
+  local: string;
+}
+
+export interface VerificarConvidadoResponse {
+  sucesso: boolean;
+  mensagem: string;
+  data?: {
+    status: string;
+    evento: EventoConvidado;
+  };
 }
