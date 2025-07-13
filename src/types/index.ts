@@ -68,19 +68,19 @@ export interface CompraIngressoRequest {
 }
 
 export interface MercadoPagoResponse {
-  success: boolean;
-  data: {
-    id: string;
-    init_point: string;
-    sandbox_init_point: string;
-    client_id: string;
-    collector_id: number;
-    operation_type: string;
-    additional_info: string;
-    external_reference: string;
-    date_created: string;
+  id: string;
+  init_point: string;
+  sandbox_init_point: string;
+  client_id: string;
+  collector_id: number;
+  operation_type: string;
+  additional_info: string;
+  external_reference: string;
+  date_created: string;
+  payer: {
+    name: string;
+    email: string;
   };
-  message: string;
 }
 
 export interface Festa {

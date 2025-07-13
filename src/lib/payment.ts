@@ -12,24 +12,19 @@ export interface PaymentPreferenceRequest {
 }
 
 export interface PaymentPreferenceResponse {
-  success: boolean;
-  data: {
-    id: string;
-    init_point: string;
-    sandbox_init_point: string;
-    client_id: string;
-    collector_id: number;
-    operation_type: string;
-    additional_info: string;
-    external_reference: string;
-    date_created: string;
-    payer: {
-      name: string;
-      surname: string;
-      email: string;
-    };
+  id: string;
+  init_point: string;
+  sandbox_init_point: string;
+  client_id: string;
+  collector_id: number;
+  operation_type: string;
+  additional_info: string;
+  external_reference: string;
+  date_created: string;
+  payer: {
+    name: string;
+    email: string;
   };
-  message: string;
 }
 
 export async function createPaymentPreference(
@@ -61,7 +56,7 @@ export async function createPaymentPreference(
 
     console.log("Fazendo requisição para Mercado Pago...");
     const response = await fetch(
-      "https://jvdpz4zf-3000.brs.devtunnels.ms/payment/create-preference",
+      "https://jvdpz4zf-3000.brs.devtunnels.ms/payment/preference",
       {
         method: "POST",
         headers: {
@@ -85,12 +80,6 @@ export async function createPaymentPreference(
 
     const result: PaymentPreferenceResponse = await response.json();
     console.log("Resposta do Mercado Pago:", result);
-
-    if (!result.success) {
-      throw new Error(
-        result.message || "Erro ao criar preferência de pagamento"
-      );
-    }
 
     return result;
   } catch (error) {

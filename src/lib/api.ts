@@ -1,6 +1,6 @@
 import { Evento } from "@/types";
 
-const API_BASE_URL = "https://koi-pretty-quietly.ngrok-free.app:";
+const API_BASE_URL = "https://koi-pretty-quietly.ngrok-free.app";
 
 export interface EventoAPI {
   id: string;

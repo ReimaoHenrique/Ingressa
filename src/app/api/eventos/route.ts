@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE_URL = "https://koi-pretty-quietly.ngrok-free.app:";
+const API_BASE_URL = "https://koi-pretty-quietly.ngrok-free.app";
 
 export async function GET() {
   try {
