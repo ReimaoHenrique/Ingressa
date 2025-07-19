@@ -56,7 +56,7 @@ export async function createPaymentPreference(
 
     console.log("Fazendo requisição para Mercado Pago...");
     const response = await fetch(
-      "https://jvdpz4zf-3000.brs.devtunnels.ms/payment/preference",
+      "https://koi-pretty-quietly.ngrok-free.app/payment/preference",
       {
         method: "POST",
         headers: {

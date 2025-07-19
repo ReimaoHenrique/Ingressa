@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE_URL = "https://koi-pretty-quietly.ngrok-free.app";
+const API_BASE_URL = "https://jvdpz4zf-3002.brs.devtunnels.ms";
 
 export async function GET() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/eventos`, {
+    const response = await fetch(`${API_BASE_URL}/api/eventos/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
