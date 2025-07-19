@@ -168,12 +168,8 @@ export function TicketForm({
                   // Log do link de pagamento
                   console.log("Link de pagamento:", paymentResult.init_point);
 
-                  // Abrir Mercado Pago em nova aba
-                  window.open(
-                    paymentResult.init_point,
-                    "_blank",
-                    "noopener,noreferrer"
-                  );
+                  // Abrir Mercado Pago na mesma aba
+                  window.location.href = paymentResult.init_point;
                 }
                 return null;
               }
